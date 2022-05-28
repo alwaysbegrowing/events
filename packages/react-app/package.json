@@ -25,6 +25,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/react": "^17.0.40",
     "@usedapp/core": "^0.12.1",
+    "antd": "^4.20.6",
     "ethers": "^5.6.8",
     "graphql": "^16.3.0",
     "ipfs-deploy": "^11.2.0",

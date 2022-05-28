@@ -1,4 +1,5 @@
 import "./index.css";
+import 'antd/dist/antd.css';
 
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { DAppProvider, Mainnet } from "@usedapp/core";
