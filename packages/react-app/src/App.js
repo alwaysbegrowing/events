@@ -43,13 +43,9 @@ function App() {
 
 
   return (
-    <Container>
-      <Header>
-      </Header>
-      <Body>
-        <Table columns={columns} dataSource={events} />
-      </Body>
-    </Container>
+
+    <Table columns={columns} dataSource={events} />
+
   );
 }
 
