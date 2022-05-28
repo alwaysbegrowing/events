@@ -26,12 +26,10 @@ const columns = [{
   }
 }]
 
-// let display = Object.keys(temp).map(key => ({[key]: temp[key]}))
 
 
 function App() {
   const [events, setEvents] = useState([])
-  console.log(events)
   useEffect(() => {
     const getEvents = async () => {
       const provider = new ethers.providers.AlchemyProvider();
