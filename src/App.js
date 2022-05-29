@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { Table, Input } from 'antd';
+import { Table, Input, Card } from 'antd';
 
 const columns = [
   {
@@ -37,11 +37,17 @@ function App() {
 
   useEffect(() => {
     const getEvents = async () => {
+      if (!contractAddress) {
+        return
+      }
       const provider = new ethers.providers.AlchemyProvider();
       const result = await fetch(`api/getAbi?address=${contractAddress}`)
       const data = await result.json();
-      const contract = new ethers.Contract(contractAddress, data.abi, provider);
-      const queryResult = await contract.queryFilter(eventName)
+      const { abi } = data
+      console.log({ abi })
+      const events = JSON.parse(abi).filter(({ type }) => type === 'event').map(({ name }) => name)
+      const contract = new ethers.Contract(contractAddress, abi, provider);
+      const queryResult = await contract.queryFilter(contract.filters)
       setEvents(queryResult)
     }
     getEvents()
@@ -49,12 +55,13 @@ function App() {
 
 
   return (
-    <>
-      <Input placeholder="Contract" value={contractAddress} onChange={(event) => { setContractAddress(event.target.value) }} />
-      <Input placeholder="Event Name" value={eventName} onChange={(event) => { setEventName(event.target.value) }} />
-
-      <Table pagination={false} rowKey={(record, index) => (record.logIndex + index)} columns={columns} dataSource={events} />
-    </>
+    <div style={{ background: "#ececec", height: "100vh", padding: 24 }}>
+      {/* <Input disabled placeholder="Event Name" value={eventName} onChange={(event) => { setEventName(event.target.value) }} /> */}
+      <Card extra={<Input placeholder="Contract" value={contractAddress} onChange={(event) => { setContractAddress(event.target.value) }} />
+      }>
+        <Table pagination={false} rowKey={(record, index) => (record.logIndex + index)} columns={columns} dataSource={events} />
+      </Card>
+    </div>
   );
 }
 
