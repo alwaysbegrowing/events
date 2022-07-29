@@ -25,7 +25,14 @@ const columns = [
     title: "Event Name",
     dataIndex: "event",
     key: "event",
-    // filters: () => ()
+    // filterDropdown: (event) => {
+    //   const filterArray = [];
+    //   const newFilters = Object.values(event).map(filterArray.push());
+    //   const filterItems = [...new Set(newFilters)];
+    //   console.log(filterItems);
+
+    //   return filterItems;
+    // },
     // onFilter: (value, record) => record.name.indexOf(value) === 0,
   },
   {
@@ -52,6 +59,7 @@ function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
   const [eventName, setEventName] = useState("");
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
   const customizeRenderEmpty = () => (
@@ -88,9 +96,12 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
+      setLoading(false);
     };
     getEvents();
   }, [contractAddress, eventName]);
+
+  console.log(loading);
 
   return (
     <Layout>
@@ -123,10 +134,12 @@ function App() {
                 to find the contract addresses.
               </Title>
               <Input
-                placeholder="Contract"
+                placeholder="Contract Address"
                 value={contractAddress}
                 onChange={(event) => {
                   setContractAddress(event.target.value);
+                  setLoading(true);
+                  // Where can I put the setLoading(false) to stop the loading animation?
                 }}
                 ref={inputRef}
               />
@@ -142,6 +155,7 @@ function App() {
               }
               columns={columns}
               dataSource={events}
+              loading={loading}
             />
           </ConfigProvider>
         </Card>
