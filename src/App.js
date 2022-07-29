@@ -1,6 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ethers } from "ethers";
-import { Table, Input, Card, Layout, Typography, Row } from "antd";
+import {
+  Table,
+  Input,
+  Card,
+  Layout,
+  Typography,
+  Row,
+  ConfigProvider,
+  Button,
+} from "antd";
+import { ContainerTwoTone } from "@ant-design/icons";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -42,6 +52,25 @@ function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
   const [eventName, setEventName] = useState("");
+  const inputRef = useRef(null);
+
+  const customizeRenderEmpty = () => (
+    <div
+      style={{
+        textAlign: "center",
+      }}
+    >
+      <ContainerTwoTone
+        style={{
+          fontSize: 30,
+        }}
+      />
+      <p></p>
+      <Button onClick={() => inputRef.current.focus()}>
+        Enter a contract address
+      </Button>
+    </div>
+  );
 
   useEffect(() => {
     const getEvents = async () => {
@@ -99,18 +128,22 @@ function App() {
                 onChange={(event) => {
                   setContractAddress(event.target.value);
                 }}
+                ref={inputRef}
               />
             </div>
           }
         >
           {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
-
-          <Table
-            pagination={false}
-            rowKey={(record, index) => record.logIndex + Math.random() * index}
-            columns={columns}
-            dataSource={events}
-          />
+          <ConfigProvider renderEmpty={customizeRenderEmpty}>
+            <Table
+              pagination={false}
+              rowKey={(record, index) =>
+                record.logIndex + Math.random() * index
+              }
+              columns={columns}
+              dataSource={events}
+            />
+          </ConfigProvider>
         </Card>
       </div>
     </Layout>
