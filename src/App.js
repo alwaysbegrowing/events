@@ -9,7 +9,8 @@ import {
   Row,
   ConfigProvider,
   Button,
-  Empty
+  Empty,
+  PageHeader
 } from "antd";
 import { ContainerOutlined, Cont } from "@ant-design/icons";
 
@@ -98,62 +99,47 @@ function App() {
   }, [contractAddress, eventName]);
 
   return (
-    <Layout>
-      <div style={{ background: "#ececec", height: "100vh", padding: 24 }}>
-        <Header></Header>
-        <Row span={24} style={{ justifyContent: "center" }}>
-          <Title
-            level={1}
-            style={{
-              paddingTop: "12px",
-              paddingBottom: "16px",
-            }}
-          >
-            Ethereum Smart Contract Events
-          </Title>
-        </Row>
-        {/* <Input disabled placeholder="Event Name" value={eventName} onChange={(event) => { setEventName(event.target.value) }} /> */}
-        <Card
-          extra={
-            <div style={{ paddingRight: "25vw" }}>
-              <Title level={5}>
-                Search for the contract addresses to populate the table. Use{" "}
-                <a
-                  href="https://etherscan.io/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  etherscan.io
-                </a>{" "}
-                to find the contract addresses.
-              </Title>
-              <Input
-                placeholder="Contract Address"
-                value={contractAddress}
-                onChange={(event) => {
-                  setContractAddress(event.target.value);
-                  setLoading(true);
-                }}
-                ref={inputRef}
-              />
-            </div>
-          }
-        >
-          {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
-          <ConfigProvider renderEmpty={customizeRenderEmpty}>
-            <Table
-              pagination={false}
-              rowKey={(record, index) =>
-                record.logIndex + Math.random() * index
-              }
-              columns={columns}
-              dataSource={events}
-              loading={loading}
+    <Layout style={{ background: "#ececec", height: "100vh", paddingLeft: 24, padingRight: 24 }}>
+      <PageHeader
+        className="site-page-header"
+        onBack={null}
+        title="Smart Contract Event Explorer"
+        subTitle="Explore events for a smart contract"
+      />        <Row span={24} style={{ justifyContent: "center" }}>
+
+      </Row>
+      {/* <Input disabled placeholder="Event Name" value={eventName} onChange={(event) => { setEventName(event.target.value) }} /> */}
+      <Card
+        extra={
+          <div style={{ width: '500px' }}>
+
+            <Input
+              placeholder="Contract Address"
+              value={contractAddress}
+              onChange={(event) => {
+                setContractAddress(event.target.value);
+                setLoading(true);
+              }}
+              ref={inputRef}
             />
-          </ConfigProvider>
-        </Card>
-      </div>
-    </Layout>
+          </div>
+        }
+      >
+
+        {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
+        {contractAddress && <ConfigProvider renderEmpty={customizeRenderEmpty}>
+          <Table
+            pagination={false}
+            rowKey={(record, index) =>
+              record.logIndex + Math.random() * index
+            }
+            columns={columns}
+            dataSource={events}
+            loading={loading}
+          />
+        </ConfigProvider>}
+      </Card>
+    </Layout >
   );
 }
 
