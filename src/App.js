@@ -99,7 +99,7 @@ function App() {
   }, [contractAddress, eventName]);
 
   return (
-    <Layout style={{ height: "100vh" }}>
+    <Layout style={{ minHeight: "100vh" }}>
       <Header >
         <img
           style={{
@@ -131,6 +131,7 @@ function App() {
           {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
           {contractAddress && <ConfigProvider renderEmpty={customizeRenderEmpty}>
             <Table
+              style={{ marginTop: 24 }}
               pagination={false}
               rowKey={(record, index) =>
                 record.logIndex + Math.random() * index
