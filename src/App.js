@@ -9,10 +9,13 @@ import {
   Row,
   ConfigProvider,
   Button,
+  Empty,
+  PageHeader,
+  Divider, Col
 } from "antd";
-import { ContainerTwoTone } from "@ant-design/icons";
+import { ContainerOutlined, GithubOutlined } from "@ant-design/icons";
 
-const { Header } = Layout;
+const { Header, Footer, Content } = Layout;
 const { Title } = Typography;
 
 // 1. turn columns into a function that takes the filters
@@ -64,21 +67,15 @@ function App() {
   const inputRef = useRef(null);
 
   const customizeRenderEmpty = () => (
-    <div
-      style={{
-        textAlign: "center",
-      }}
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE
+      }
+
+      description={null}
     >
-      <ContainerTwoTone
-        style={{
-          fontSize: 30,
-        }}
-      />
-      <p></p>
       <Button onClick={() => inputRef.current.focus()}>
         Enter a contract address
-      </Button>
-    </div>
+      </Button>    </Empty>
   );
 
   useEffect(() => {
@@ -103,50 +100,47 @@ function App() {
   }, [contractAddress, eventName]);
 
   return (
-    <Layout>
-      <div style={{ background: "#ececec", height: "100vh", padding: 24 }}>
-        <Header></Header>
-        <Row span={24} style={{ justifyContent: "center" }}>
-          <Title
-            level={1}
+    <Layout style={{ minHeight: "100vh" }}>
+      <Header style={{ backgroundColor: "#f6ffed", boxShadow: "0 1px 4px rgb(0 21 41 / 8%)", zIndex: 1 }} >
+        <Row justify="space-between">
+          <Col><img
             style={{
-              paddingTop: "12px",
-              paddingBottom: "16px",
+              float: 'left',
+              height: 31,
+              // width: 200,
+              margin: '16px 0px 16px 0'
             }}
-          >
-            Ethereum Smart Contract Events
-          </Title>
+            src="https://tse3.mm.bing.net/th?id=OIP.XYaeDXspGLV6vl4xFh7CDgHaHa"
+          />
+            <b> Always Be Growing</b>
+          </Col>
+          <Col>    <Button onClick={() => { window.open('https://github.com/alwaysbegrowing/events') }} type="text"><GithubOutlined /></Button>
+          </Col>
+
         </Row>
-        {/* <Input disabled placeholder="Event Name" value={eventName} onChange={(event) => { setEventName(event.target.value) }} /> */}
-        <Card
-          extra={
-            <div style={{ paddingRight: "25vw" }}>
-              <Title level={5}>
-                Search for the contract addresses to populate the table. Use{" "}
-                <a
-                  href="https://etherscan.io/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  etherscan.io
-                </a>{" "}
-                to find the contract addresses.
-              </Title>
-              <Input
-                placeholder="Contract Address"
-                value={contractAddress}
-                onChange={(event) => {
-                  setContractAddress(event.target.value);
-                  setLoading(true);
-                }}
-                ref={inputRef}
-              />
-            </div>
-          }
-        >
+      </Header>
+      <Content style={{ padding: '0 24px', marginTop: 16 }}>
+        <PageHeader style={{ backgroundColor: "#fff" }} title='Blockchain Event Explorer'>Enter a smart contract address below to see all historic events emitted from that contract. </PageHeader>
+
+        <div style={{ background: '#fff', padding: 24 }}>
+
+          <div >
+
+            <Input
+              placeholder="Contract Address"
+              value={contractAddress}
+              onChange={(event) => {
+                setContractAddress(event.target.value);
+                setLoading(true);
+              }}
+              ref={inputRef}
+            />
+          </div>
+
           {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
-          <ConfigProvider renderEmpty={customizeRenderEmpty}>
+          {contractAddress && <ConfigProvider renderEmpty={customizeRenderEmpty}>
             <Table
+              style={{ marginTop: 24 }}
               pagination={false}
               rowKey={(record, index) =>
                 record.logIndex + Math.random() * index
@@ -155,10 +149,11 @@ function App() {
               dataSource={events}
               loading={loading}
             />
-          </ConfigProvider>
-        </Card>
-      </div>
-    </Layout>
+          </ConfigProvider>}
+        </div >
+      </Content>
+      <Footer style={{ textAlign: 'center' }}>Created by <a href="https://abg.garden">Always Be Growing</a></Footer>
+    </Layout >
   );
 }
 
