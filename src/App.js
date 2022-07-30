@@ -60,6 +60,7 @@ function App() {
   const [contractAddress, setContractAddress] = useState();
   const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState([]);
   const inputRef = useRef(null);
 
   const customizeRenderEmpty = () => (
@@ -90,9 +91,9 @@ function App() {
       const data = await result.json();
       const { abi } = data;
       console.log({ abi });
-      const events = JSON.parse(abi)
-        .filter(({ type }) => type === "event")
-        .map(({ name }) => name);
+      // const events = JSON.parse(abi)
+      //   .filter(({ type }) => type === "event")
+      //   .map(({ name }) => name);
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
@@ -100,8 +101,6 @@ function App() {
     };
     getEvents();
   }, [contractAddress, eventName]);
-
-  console.log(loading);
 
   return (
     <Layout>
@@ -139,7 +138,6 @@ function App() {
                 onChange={(event) => {
                   setContractAddress(event.target.value);
                   setLoading(true);
-                  // Where can I put the setLoading(false) to stop the loading animation?
                 }}
                 ref={inputRef}
               />
