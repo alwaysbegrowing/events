@@ -15,53 +15,46 @@ import { ContainerTwoTone } from "@ant-design/icons";
 const { Header } = Layout;
 const { Title } = Typography;
 
-// 1. turn columns into a function that takes the filters
-// 2. pass the filters into columns
-// 3. get the filters from the events object
-// 4. use https://stackoverflow.com/questions/11246758/how-to-get-unique-values-in-an-array to get only unique filters
-
-const columns = [
-  {
-    title: "Event Name",
-    dataIndex: "event",
-    key: "event",
-    // filterDropdown: (event) => {
-    //   const filterArray = [];
-    //   const newFilters = Object.values(event).map(filterArray.push());
-    //   const filterItems = [...new Set(newFilters)];
-    //   console.log(filterItems);
-
-    //   return filterItems;
-    // },
-    // onFilter: (value, record) => record.name.indexOf(value) === 0,
-  },
-  {
-    title: "Arguments",
-    key: "args",
-    render: (temp) => {
-      const data = Object.entries({ ...temp.args });
-      const noNumbers = data.filter((row) => isNaN(row[0]));
-      const rows = noNumbers.map((name, index) => (
-        <li key={index}>{JSON.stringify(name)}</li>
-      ));
-      return <>{rows}</>;
-    },
-  },
-  {
-    title: "BlockNumber",
-    dataIndex: "blockNumber",
-    key: "blockNumber",
-    sorter: (a, b) => a.blockNumber - b.blockNumber,
-  },
-];
-
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState([]);
   const inputRef = useRef(null);
+
+  const createColumns = (filter) => [
+    {
+      title: "Event Name",
+      dataIndex: "event",
+      key: "event",
+      filters: filter,
+      onFilter: (value, record) => record.event.indexOf(value) === 0,
+    },
+    {
+      title: "Arguments",
+      key: "args",
+      render: (temp) => {
+        const data = Object.entries({ ...temp.args });
+        const noNumbers = data.filter((row) => isNaN(row[0]));
+        const rows = noNumbers.map((name, index) => (
+          <li key={index}>{JSON.stringify(name)}</li>
+        ));
+        return <>{rows}</>;
+      },
+    },
+    {
+      title: "BlockNumber",
+      dataIndex: "blockNumber",
+      key: "blockNumber",
+      sorter: (a, b) => a.blockNumber - b.blockNumber,
+    },
+  ];
+
+  const eventNames = events.map((item) => item.event);
+  const uniqueEventNames = [...new Set(eventNames)];
+  const filter = uniqueEventNames.map((event) => ({
+    text: event,
+    value: event,
+  }));
 
   const customizeRenderEmpty = () => (
     <div
@@ -90,17 +83,13 @@ function App() {
       const result = await fetch(`api/getAbi?address=${contractAddress}`);
       const data = await result.json();
       const { abi } = data;
-      console.log({ abi });
-      // const events = JSON.parse(abi)
-      //   .filter(({ type }) => type === "event")
-      //   .map(({ name }) => name);
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
       setLoading(false);
     };
     getEvents();
-  }, [contractAddress, eventName]);
+  }, [contractAddress]);
 
   return (
     <Layout>
@@ -151,7 +140,7 @@ function App() {
               rowKey={(record, index) =>
                 record.logIndex + Math.random() * index
               }
-              columns={columns}
+              columns={createColumns(filter)}
               dataSource={events}
               loading={loading}
             />
