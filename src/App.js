@@ -9,8 +9,9 @@ import {
   Row,
   ConfigProvider,
   Button,
+  Empty
 } from "antd";
-import { ContainerTwoTone } from "@ant-design/icons";
+import { ContainerOutlined, Cont } from "@ant-design/icons";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -64,21 +65,15 @@ function App() {
   const inputRef = useRef(null);
 
   const customizeRenderEmpty = () => (
-    <div
-      style={{
-        textAlign: "center",
-      }}
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE
+      }
+
+      description={null}
     >
-      <ContainerTwoTone
-        style={{
-          fontSize: 30,
-        }}
-      />
-      <p></p>
       <Button onClick={() => inputRef.current.focus()}>
         Enter a contract address
-      </Button>
-    </div>
+      </Button>    </Empty>
   );
 
   useEffect(() => {
