@@ -99,9 +99,10 @@ function App() {
     getEvents();
   }, [contractAddress, eventName]);
 
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ backgroundColor: "#f6ffed", boxShadow: "0 1px 4px rgb(0 21 41 / 8%)", zIndex: 1 }} >
+      <Header style={{ backgroundColor: "#f6ffed" }} >
         <Row justify="space-between">
           <Col><img
             style={{
