@@ -99,11 +99,6 @@ function App() {
     getEvents();
   }, [contractAddress, eventName]);
 
-  ConfigProvider.config({
-    theme: {
-      primaryColor: '#25b864',
-    },
-  });
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
