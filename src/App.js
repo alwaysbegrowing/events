@@ -66,7 +66,6 @@ function App() {
     events.sort((a, b) => (
       a.blockNumber > b.blockNumber
     ))
-    console.log(events)
     events.forEach((event) => {
       if (event.event === "RoleGranted") {
         if (!roles[event.args[0]]) {
@@ -82,7 +81,7 @@ function App() {
 
       }
     })
-    console.log(roles)
+    console.log({ roles })
     return roles
 
   }
