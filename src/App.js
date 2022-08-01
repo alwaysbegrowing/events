@@ -18,6 +18,7 @@ import { ContainerOutlined, GithubOutlined } from "@ant-design/icons";
 const { Header, Footer, Content } = Layout;
 const { Title } = Typography;
 
+
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
@@ -59,6 +60,33 @@ function App() {
     value: event,
   }));
 
+  const getCurrentRoles = (events) => {
+    const roles = {}
+    // events must be in assending order or role calculations will be incorrect
+    events.sort((a, b) => (
+      a.blockNumber > b.blockNumber
+    ))
+    console.log(events)
+    events.forEach((event) => {
+      if (event.event === "RoleGranted") {
+        if (!roles[event.args[0]]) {
+          roles[event.args[0]] = {}
+        }
+        roles[event.args[0]][event.args[1]] = true
+      }
+      if (event.event === "RoleRevoked") {
+        if (!roles[event.args[0]]) {
+          roles[event.args[0]] = {}
+        }
+        roles[event.args[0]][event.args[1]] = false
+
+      }
+    })
+    console.log(roles)
+    return roles
+
+  }
+
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE
@@ -82,6 +110,7 @@ function App() {
       const { abi } = data;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
+      getCurrentRoles(queryResult)
       setEvents(queryResult);
       setLoading(false);
     };
@@ -115,7 +144,7 @@ function App() {
         <div style={{ background: '#fff', padding: 24 }}>
 
           <div >
-
+            {/* // 0x9f20521ef789fd2020e708390b1e6c701d8218ba */}
             <Input
               placeholder="Contract Address"
               value={contractAddress}
@@ -139,6 +168,7 @@ function App() {
               dataSource={events}
               loading={loading}
             />
+
           </ConfigProvider>}
         </div >
       </Content>
