@@ -20,8 +20,16 @@ function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
   const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(false);
+  const [abiError, setAbiError] = useState(false);
   const inputRef = useRef(null);
+  const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
+  const { data, error } = useSWR(
+    `api/getAbi?address=${contractAddress}`,
+    fetcher
+  );
+
+  console.log(data, error);
 
   const createColumns = (filter) => [
     {
@@ -61,7 +69,7 @@ function App() {
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description={error === true ? "Error" : "No Events"}
+      description={abiError === true ? "Error" : "No Events"}
     ></Empty>
   );
 
@@ -73,12 +81,15 @@ function App() {
       const provider = new ethers.providers.AlchemyProvider();
 
       const getError = () => {
-        // if (error) {
-        //   setError(true);
-        //   setLoading(false);
-        // } else {
-        //   setError(false);
-        // }
+        if (error) {
+          setAbiError(true);
+          setLoading(false);
+        } else if (data.abi === "Invalid Address format") {
+          setAbiError(true);
+          setLoading(false);
+        } else {
+          setAbiError(false);
+        }
       };
       getError();
       const { abi } = data;
@@ -88,7 +99,7 @@ function App() {
       setLoading(false);
     };
     getEvents();
-  }, [contractAddress, data]);
+  }, [contractAddress, data, error]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
