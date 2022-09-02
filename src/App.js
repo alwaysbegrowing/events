@@ -29,8 +29,6 @@ function App() {
     fetcher
   );
 
-  console.log(data, error);
-
   const createColumns = (filter) => [
     {
       title: "Event Name",
