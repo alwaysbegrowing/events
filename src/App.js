@@ -82,7 +82,10 @@ function App() {
         if (error) {
           setAbiError(true);
           setLoading(false);
-        } else if (data.abi === "Invalid Address format") {
+        } else if (
+          (data.abi === "Invalid Address format") |
+          (data.abi === "Contract source code not verified")
+        ) {
           setAbiError(true);
           setLoading(false);
         } else {
