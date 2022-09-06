@@ -16,18 +16,28 @@ import { GithubOutlined } from "@ant-design/icons";
 
 const { Header, Footer, Content } = Layout;
 
-function App() {
-  const [events, setEvents] = useState([]);
-  const [contractAddress, setContractAddress] = useState();
-  const [loading, setLoading] = useState(false);
-  const [abiError, setAbiError] = useState(false);
-  const inputRef = useRef(null);
-  const fetcher = (...args) => fetch(...args).then((res) => res.json());
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
+function GetData(contractAddress) {
   const { data, error } = useSWR(
     `api/getAbi?address=${contractAddress}`,
     fetcher
   );
+
+  return {
+    contractEvents: data,
+    isLoading: !error && !data,
+    isError: error,
+  };
+}
+
+function App() {
+  const [events, setEvents] = useState([]);
+  const [contractAddress, setContractAddress] = useState();
+  const [abiError, setAbiError] = useState(false);
+  const inputRef = useRef(null);
+
+  const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -73,34 +83,31 @@ function App() {
 
   useEffect(() => {
     const getEvents = async () => {
-      if (!contractAddress || !data) {
+      if (!contractAddress || !contractEvents) {
         return;
       }
       const provider = new ethers.providers.AlchemyProvider();
 
       const getError = () => {
-        if (error) {
+        if (isError) {
           setAbiError(true);
-          setLoading(false);
         } else if (
-          (data.abi === "Invalid Address format") |
-          (data.abi === "Contract source code not verified")
+          (contractEvents.abi === "Invalid Address format") |
+          (contractEvents.abi === "Contract source code not verified")
         ) {
           setAbiError(true);
-          setLoading(false);
         } else {
           setAbiError(false);
         }
       };
       getError();
-      const { abi } = data;
+      const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
-      setLoading(false);
     };
     getEvents();
-  }, [contractAddress, data, error]);
+  }, [contractAddress, contractEvents, isError]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -148,7 +155,6 @@ function App() {
               value={contractAddress}
               onChange={(event) => {
                 setContractAddress(event.target.value);
-                setLoading(true);
               }}
               ref={inputRef}
             />
@@ -165,7 +171,7 @@ function App() {
                 }
                 columns={createColumns(filter)}
                 dataSource={events}
-                loading={loading}
+                loading={isLoading}
               />
             </ConfigProvider>
           )}
