@@ -64,6 +64,7 @@ function App() {
       dataIndex: "blockNumber",
       key: "blockNumber",
       sorter: (a, b) => a.blockNumber - b.blockNumber,
+      sortOrder: "descend",
     },
   ];
 
