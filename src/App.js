@@ -16,9 +16,21 @@ import { GithubOutlined } from "@ant-design/icons";
 
 const { Header, Footer, Content } = Layout;
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+const fetcher = async (...args) => {
+  const res = await fetch(...args);
+  if (
+    !res.ok
+    // res.data.abi === "Invalid Address format" ||
+    // res.data.abi === "Contract source code not verified"
+  ) {
+    const error = new Error("An error occurred while fetching the data.");
+    throw error;
+  }
 
-function GetData(contractAddress) {
+  return res.json();
+};
+
+function useData(contractAddress) {
   const { data, error } = useSWR(
     `api/getAbi?address=${contractAddress}`,
     fetcher
@@ -34,10 +46,10 @@ function GetData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [abiError, setAbiError] = useState(false);
+  // const [abiError, setAbiError] = useState(false);
   const inputRef = useRef(null);
 
-  const { contractEvents, isLoading, isError } = GetData(contractAddress);
+  const { contractEvents, isLoading, isError } = useData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -78,7 +90,7 @@ function App() {
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description={abiError === true ? "Error" : "No Events"}
+      description={isError === true ? "Error" : "No Events"}
     ></Empty>
   );
 
@@ -89,19 +101,14 @@ function App() {
       }
       const provider = new ethers.providers.AlchemyProvider();
 
-      const getError = () => {
-        if (isError) {
-          setAbiError(true);
-        } else if (
-          (contractEvents.abi === "Invalid Address format") |
-          (contractEvents.abi === "Contract source code not verified")
-        ) {
-          setAbiError(true);
-        } else {
-          setAbiError(false);
-        }
-      };
-      getError();
+      // const getError = () => {
+      //   if (isError) {
+      //     setAbiError(true);
+      //   } else {
+      //     setAbiError(false);
+      //   }
+      // };
+      // getError();
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
