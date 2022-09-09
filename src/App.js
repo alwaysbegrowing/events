@@ -29,7 +29,7 @@ const fetcher = async (...args) => {
 
 function useData(contractAddress) {
   const { data, error } = useSWR(
-    `api/getAbi?address=${contractAddress}`,
+    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
     fetcher
   );
 
