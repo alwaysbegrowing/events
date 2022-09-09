@@ -12,7 +12,7 @@ export default async function handler(request, response) {
   // print the JSON response
   let abi = data.result;
 
-  return response.json({
+  return response.status(result.status).json({
     abi,
     status: data.status,
     message: data.message,
