@@ -18,15 +18,13 @@ const { Header, Footer, Content } = Layout;
 
 const fetcher = async (...args) => {
   const res = await fetch(...args);
-  if (res.status === 0) {
-    const error = new Error(true);
-    throw error;
+  if (res.ok) {
+    const response = await res.json();
+    if (response.status === "1") {
+      return response;
+    }
   }
-
-  console.log(res.status);
-  console.log(res.json());
-
-  return res.json();
+  throw new Error(true);
 };
 
 function useData(contractAddress) {
@@ -89,11 +87,9 @@ function App() {
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description={isError === true ? "Error" : "No Events"}
+      description={isError ? "Error" : "No Events"}
     ></Empty>
   );
-
-  console.log(isError);
 
   useEffect(() => {
     const getEvents = async () => {
@@ -102,14 +98,6 @@ function App() {
       }
       const provider = new ethers.providers.AlchemyProvider();
 
-      // const getError = () => {
-      //   if (isError) {
-      //     setAbiError(true);
-      //   } else {
-      //     setAbiError(false);
-      //   }
-      // };
-      // getError();
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
