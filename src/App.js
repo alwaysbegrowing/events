@@ -18,14 +18,13 @@ const { Header, Footer, Content } = Layout;
 
 const fetcher = async (...args) => {
   const res = await fetch(...args);
-  if (
-    !res.ok
-    // res.data.abi === "Invalid Address format" ||
-    // res.data.abi === "Contract source code not verified"
-  ) {
-    const error = new Error("An error occurred while fetching the data.");
+  if (res.status === 0) {
+    const error = new Error(true);
     throw error;
   }
+
+  console.log(res.status);
+  console.log(res.json());
 
   return res.json();
 };
@@ -94,6 +93,8 @@ function App() {
     ></Empty>
   );
 
+  console.log(isError);
+
   useEffect(() => {
     const getEvents = async () => {
       if (!contractAddress || !contractEvents) {
@@ -113,6 +114,7 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
+      console.log(isError);
     };
     getEvents();
   }, [contractAddress, contractEvents, isError]);
