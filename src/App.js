@@ -43,7 +43,6 @@ function useData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  // const [abiError, setAbiError] = useState(false);
   const inputRef = useRef(null);
 
   const { contractEvents, isLoading, isError } = useData(contractAddress);
@@ -94,6 +93,7 @@ function App() {
   useEffect(() => {
     const getEvents = async () => {
       if (!contractAddress || !contractEvents) {
+        setEvents([]);
         return;
       }
       const provider = new ethers.providers.AlchemyProvider();
@@ -102,7 +102,6 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
-      console.log(isError);
     };
     getEvents();
   }, [contractAddress, contractEvents, isError]);
