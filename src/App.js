@@ -38,7 +38,12 @@ function App() {
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
-  console.log(timestamps);
+  const addTimestamp = events.map((event, index) => ({
+    ...event,
+    timestamp: timestamps[index],
+  }));
+
+  console.log(addTimestamp);
 
   const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
@@ -68,6 +73,11 @@ function App() {
       key: "blockNumber",
       sorter: (a, b) => a.blockNumber - b.blockNumber,
       sortOrder: "descend",
+    },
+    {
+      title: "Timestamp",
+      dataIndex: "timestamp",
+      key: "timestamp",
     },
   ];
 
@@ -113,22 +123,19 @@ function App() {
       setEvents(queryResult);
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
-      const uniqueBlocks = [...new Set(eventBlocks)];
+      // const uniqueBlocks = [...new Set(eventBlocks)];
 
       const timestampArr = [];
 
       async function getTimestamp() {
-        for (const block of uniqueBlocks) {
-          const timestampDict = {};
+        for (const block of eventBlocks) {
           const time = await provider.getBlock(block);
           const timestamp = time.timestamp;
-          timestampDict.block = block;
-          timestampDict.timestamp = timestamp;
-          timestampArr.push({ timestampDict: timestampDict });
+          const date = new Date(timestamp * 1000);
+          timestampArr.push(date);
         }
+        setTimestamps(timestampArr);
       }
-
-      setTimestamps(timestampArr);
 
       getTimestamp();
     };
@@ -196,7 +203,7 @@ function App() {
                   record.logIndex + Math.random() * index
                 }
                 columns={createColumns(filter)}
-                dataSource={events}
+                dataSource={addTimestamp}
                 loading={isLoading}
               />
             </ConfigProvider>
