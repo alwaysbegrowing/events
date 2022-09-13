@@ -1,28 +1,51 @@
 import React, { useEffect, useState, useRef } from "react";
+import useSWR from "swr";
 import { ethers } from "ethers";
 import {
   Table,
   Input,
-  Card,
   Layout,
-  Typography,
   Row,
   ConfigProvider,
   Button,
   Empty,
   PageHeader,
-  Divider, Col
+  Col,
 } from "antd";
-import { ContainerOutlined, GithubOutlined } from "@ant-design/icons";
+import { GithubOutlined } from "@ant-design/icons";
 
 const { Header, Footer, Content } = Layout;
-const { Title } = Typography;
+
+const fetcher = async (...args) => {
+  const res = await fetch(...args);
+  if (res.ok) {
+    const response = await res.json();
+    if (response.status === "1") {
+      return response;
+    }
+  }
+  throw new Error(true);
+};
+
+function useData(contractAddress) {
+  const { data, error } = useSWR(
+    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
+    fetcher
+  );
+
+  return {
+    contractEvents: data,
+    isLoading: !error && !data,
+    isError: error,
+  };
+}
 
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+
+  const { contractEvents, isLoading, isError } = useData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -49,6 +72,7 @@ function App() {
       dataIndex: "blockNumber",
       key: "blockNumber",
       sorter: (a, b) => a.blockNumber - b.blockNumber,
+      sortOrder: "descend",
     },
   ];
 
@@ -61,89 +85,99 @@ function App() {
 
   const customizeRenderEmpty = () => (
     <Empty
-      image={Empty.PRESENTED_IMAGE_SIMPLE
-      }
-
-      description={null}
-    >
-      <Button onClick={() => inputRef.current.focus()}>
-        Enter a contract address
-      </Button>    </Empty>
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={isError ? "Error" : "No Events"}
+    ></Empty>
   );
 
   useEffect(() => {
     const getEvents = async () => {
-      if (!contractAddress) {
+      if (!contractAddress || !contractEvents) {
+        setEvents([]);
         return;
       }
       const provider = new ethers.providers.AlchemyProvider();
-      const result = await fetch(`api/getAbi?address=${contractAddress}`);
-      const data = await result.json();
-      const { abi } = data;
+
+      const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
-      setLoading(false);
     };
     getEvents();
-  }, [contractAddress]);
-
+  }, [contractAddress, contractEvents, isError]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ backgroundColor: "#f6ffed" }} >
+      <Header style={{ backgroundColor: "#f6ffed" }}>
         <Row justify="space-between">
-          <Col><img
-            style={{
-              float: 'left',
-              height: 31,
-              // width: 200,
-              margin: '16px 0px 16px 0'
-            }}
-            src="https://tse3.mm.bing.net/th?id=OIP.XYaeDXspGLV6vl4xFh7CDgHaHa"
-          />
+          <Col>
+            <img
+              style={{
+                float: "left",
+                height: 31,
+                // width: 200,
+                margin: "16px 0px 16px 0",
+              }}
+              src="https://tse3.mm.bing.net/th?id=OIP.XYaeDXspGLV6vl4xFh7CDgHaHa"
+              alt="abg logo"
+            />
             <b> Always Be Growing</b>
           </Col>
-          <Col>    <Button onClick={() => { window.open('https://github.com/alwaysbegrowing/events') }} type="text"><GithubOutlined /></Button>
+          <Col>
+            {" "}
+            <Button
+              onClick={() => {
+                window.open("https://github.com/alwaysbegrowing/events");
+              }}
+              type="text"
+            >
+              <GithubOutlined />
+            </Button>
           </Col>
-
         </Row>
       </Header>
-      <Content style={{ padding: '0 24px', marginTop: 16 }}>
-        <PageHeader style={{ backgroundColor: "#fff" }} title='Blockchain Event Explorer'>Enter a smart contract address below to see all historic events emitted from that contract. </PageHeader>
+      <Content style={{ padding: "0 24px", marginTop: 16 }}>
+        <PageHeader
+          style={{ backgroundColor: "#fff" }}
+          title="Blockchain Event Explorer"
+        >
+          Enter a smart contract address below to see all historic events
+          emitted from that contract.{" "}
+        </PageHeader>
 
-        <div style={{ background: '#fff', padding: 24 }}>
-
-          <div >
-
+        <div style={{ background: "#fff", padding: 24 }}>
+          <div>
             <Input
               placeholder="Contract Address"
               value={contractAddress}
               onChange={(event) => {
                 setContractAddress(event.target.value);
-                setLoading(true);
               }}
               ref={inputRef}
             />
           </div>
 
           {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
-          {contractAddress && <ConfigProvider renderEmpty={customizeRenderEmpty}>
-            <Table
-              style={{ marginTop: 24 }}
-              pagination={false}
-              rowKey={(record, index) =>
-                record.logIndex + Math.random() * index
-              }
-              columns={createColumns(filter)}
-              dataSource={events}
-              loading={loading}
-            />
-          </ConfigProvider>}
-        </div >
+          {contractAddress && (
+            <ConfigProvider renderEmpty={customizeRenderEmpty}>
+              <Table
+                style={{ marginTop: 24 }}
+                pagination={false}
+                rowKey={(record, index) =>
+                  record.logIndex + Math.random() * index
+                }
+                columns={createColumns(filter)}
+                dataSource={events}
+                loading={isLoading}
+              />
+            </ConfigProvider>
+          )}
+        </div>
       </Content>
-      <Footer style={{ textAlign: 'center' }}>Created by <a href="https://abg.garden">Always Be Growing</a></Footer>
-    </Layout >
+      <Footer style={{ textAlign: "center" }}>
+        Created by <a href="https://abg.garden">Always Be Growing</a>
+      </Footer>
+    </Layout>
   );
 }
 
