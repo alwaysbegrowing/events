@@ -35,10 +35,10 @@ function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
   const [abiError, setAbiError] = useState(false);
-  const [blockNumbers, setBlockNumbers] = useState([]);
+  const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
-  console.log(blockNumbers);
+  console.log(timestamps);
 
   const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
@@ -78,8 +78,6 @@ function App() {
     value: event,
   }));
 
-  console.log(events.filter.blockNumber);
-
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -113,19 +111,29 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
+
+      const eventBlocks = queryResult.map((item) => item.blockNumber);
+      const uniqueBlocks = [...new Set(eventBlocks)];
+
+      const timestampArr = [];
+
+      async function getTimestamp() {
+        for (const block of uniqueBlocks) {
+          const timestampDict = {};
+          const time = await provider.getBlock(block);
+          const timestamp = time.timestamp;
+          timestampDict.block = block;
+          timestampDict.timestamp = timestamp;
+          timestampArr.push({ timestampDict: timestampDict });
+        }
+      }
+
+      setTimestamps(timestampArr);
+
+      getTimestamp();
     };
     getEvents();
-
-    const getBlocks = async () => {
-      const provider = new ethers.providers.AlchemyProvider();
-      const getBlocks = provider.getBlock(events.filters.blockNumber);
-      setBlockNumbers(getBlocks);
-      // const timestamp = (await getBlocks).timestamp;
-      // console.log(timestamp);
-    };
-
-    getBlocks();
-  }, [contractAddress, contractEvents, isError, events.filters.blockNumber]);
+  }, [contractAddress, contractEvents, isError]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
