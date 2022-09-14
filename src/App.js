@@ -13,6 +13,7 @@ import {
   Col,
 } from "antd";
 import { GithubOutlined } from "@ant-design/icons";
+import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
 
@@ -135,7 +136,7 @@ function App() {
           const time = await provider.getBlock(block);
           const timestamp = time.timestamp;
           const date = new Date(timestamp * 1000);
-          const newDate = date.toString();
+          const newDate = timeDifferenceForDate(date);
           timestampArr.push(newDate);
         }
         setTimestamps(timestampArr);
