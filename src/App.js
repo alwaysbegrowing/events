@@ -76,6 +76,12 @@ function App() {
       title: "Timestamp",
       dataIndex: "timestamp",
       key: "timestamp",
+      render: (timestamp) => {
+        if (!timestamp) {
+          return <p>Loading...</p>;
+        }
+        return timestamp;
+      },
     },
   ];
 
