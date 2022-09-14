@@ -38,12 +38,10 @@ function App() {
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
-  const addTimestamp = events.map((event, index) => ({
+  const updatedEventsTime = events.map((event, index) => ({
     ...event,
     timestamp: timestamps[index],
   }));
-
-  console.log(addTimestamp);
 
   const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
@@ -123,7 +121,6 @@ function App() {
       setEvents(queryResult);
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
-      // const uniqueBlocks = [...new Set(eventBlocks)];
 
       const timestampArr = [];
 
@@ -132,7 +129,8 @@ function App() {
           const time = await provider.getBlock(block);
           const timestamp = time.timestamp;
           const date = new Date(timestamp * 1000);
-          timestampArr.push(date);
+          const newDate = date.toString();
+          timestampArr.push(newDate);
         }
         setTimestamps(timestampArr);
       }
@@ -203,7 +201,7 @@ function App() {
                   record.logIndex + Math.random() * index
                 }
                 columns={createColumns(filter)}
-                dataSource={addTimestamp}
+                dataSource={updatedEventsTime}
                 loading={isLoading}
               />
             </ConfigProvider>
