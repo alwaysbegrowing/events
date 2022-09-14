@@ -210,6 +210,7 @@ function App() {
                 columns={createColumns(filter)}
                 dataSource={updatedEventsTime}
                 loading={isLoading}
+                scroll={{ x: 400 }}
               />
             </ConfigProvider>
           )}
