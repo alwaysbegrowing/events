@@ -70,7 +70,10 @@ function App() {
         const data = Object.entries({ ...temp.args });
         const noNumbers = data.filter((row) => isNaN(row[0]));
         const rows = noNumbers.map((name, index) => (
-          <li key={index}>{JSON.stringify(name)}</li>
+          <li key={index}>
+            <b>{JSON.stringify(name[0]).replace(/"/g, "")}:</b>{" "}
+            {name[1].toString()}
+          </li>
         ));
         return <>{rows}</>;
       },
