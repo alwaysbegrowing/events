@@ -13,6 +13,7 @@ import {
   Col,
 } from "antd";
 import { GithubOutlined } from "@ant-design/icons";
+import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
 
@@ -43,9 +44,16 @@ function useData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
+  const [abiError, setAbiError] = useState(false);
+  const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
-  const { contractEvents, isLoading, isError } = useData(contractAddress);
+  const updatedEventsTime = events.map((event, index) => ({
+    ...event,
+    timestamp: timestamps[index],
+  }));
+
+  const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -73,6 +81,17 @@ function App() {
       key: "blockNumber",
       sorter: (a, b) => a.blockNumber - b.blockNumber,
       sortOrder: "descend",
+    },
+    {
+      title: "Timestamp",
+      dataIndex: "timestamp",
+      key: "timestamp",
+      render: (timestamp) => {
+        if (!timestamp) {
+          return <p>Loading...</p>;
+        }
+        return timestamp;
+      },
     },
   ];
 
@@ -102,6 +121,23 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
+
+      const eventBlocks = queryResult.map((item) => item.blockNumber);
+
+      const timestampArr = [];
+
+      async function getTimestamp() {
+        for (const block of eventBlocks) {
+          const time = await provider.getBlock(block);
+          const timestamp = time.timestamp;
+          const date = new Date(timestamp * 1000);
+          const newDate = timeDifferenceForDate(date);
+          timestampArr.push(newDate);
+        }
+        setTimestamps(timestampArr);
+      }
+
+      getTimestamp();
     };
     getEvents();
   }, [contractAddress, contractEvents, isError]);
@@ -167,8 +203,9 @@ function App() {
                   record.logIndex + Math.random() * index
                 }
                 columns={createColumns(filter)}
-                dataSource={events}
+                dataSource={updatedEventsTime}
                 loading={isLoading}
+                scroll={{ x: 400 }}
               />
             </ConfigProvider>
           )}

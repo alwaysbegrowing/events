@@ -8771,6 +8771,11 @@ readable-stream@^3.0.6:
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
 
+readable-timestamp-js@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/readable-timestamp-js/-/readable-timestamp-js-1.0.2.tgz#475ae594995dc4c34408d5276151fd90b4111646"
+  integrity sha512-sGQ9FINFN0Bcbu6TtuDXgKcIERWt/QVzC4y7Mcnt6yt/hvrYvAYvLPfGQ4Lzf2aYcXeVFa4hqGK6o4/EqqAFvg==
+
 readdirp@~3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-3.6.0.tgz#74a370bd857116e245b29cc97340cd431a02a6c7"
