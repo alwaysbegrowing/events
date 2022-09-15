@@ -17,11 +17,20 @@ import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+const fetcher = async (...args) => {
+  const res = await fetch(...args);
+  if (res.ok) {
+    const response = await res.json();
+    if (response.status === "1") {
+      return response;
+    }
+  }
+  throw new Error(true);
+};
 
-function GetData(contractAddress) {
+function useData(contractAddress) {
   const { data, error } = useSWR(
-    `api/getAbi?address=${contractAddress}`,
+    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
     fetcher
   );
 
@@ -96,31 +105,17 @@ function App() {
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description={abiError === true ? "Error" : "No Events"}
+      description={isError ? "Error" : "No Events"}
     ></Empty>
   );
 
   useEffect(() => {
     const getEvents = async () => {
       if (!contractAddress || !contractEvents) {
+        setEvents([]);
         return;
       }
       const provider = new ethers.providers.AlchemyProvider();
-
-      const getError = () => {
-        if (isError) {
-          setAbiError(true);
-        } else if (
-          (contractEvents.abi === "Invalid Address format") |
-          (contractEvents.abi === "Contract source code not verified")
-        ) {
-          setAbiError(true);
-        } else {
-          setAbiError(false);
-        }
-      };
-
-      getError();
 
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
