@@ -63,7 +63,7 @@ function App() {
         const rows = noNumbers.map((name, index) => (
           <li key={index}>
             <b>{JSON.stringify(name[0]).replace(/"/g, "")}:</b>{" "}
-            {JSON.stringify(name[1]).replace(/"/g, "")}
+            {name[1].toString()}
           </li>
         ));
         return <>{rows}</>;
