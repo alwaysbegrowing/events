@@ -44,7 +44,7 @@ function useData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [abiError, setAbiError] = useState(false);
+  // const [abiError, setAbiError] = useState(false);
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
@@ -53,7 +53,7 @@ function App() {
     timestamp: timestamps[index],
   }));
 
-  const { contractEvents, isLoading, isError } = GetData(contractAddress);
+  const { contractEvents, isLoading, isError } = useData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -127,6 +127,9 @@ function App() {
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
 
+      const addresses = queryResult.map((item) => item.args);
+      console.log(addresses);
+
       const timestampArr = [];
 
       async function getTimestamp() {
@@ -141,6 +144,23 @@ function App() {
       }
 
       getTimestamp();
+
+      async function getAddresses() {
+        const contractName = addresses.map((address) => {
+          address.forEach(async (element) => {
+            const ens = await provider.lookupAddress(element);
+            console.log(ens);
+          });
+        });
+        console.log(contractName);
+      }
+
+      getAddresses();
+
+      //I want to get the ENS for each contract address if available. If not available, return the contract address as a string.
+      //The addressses are held in the data which is decoded in the column.
+      //I need to split the array, but maybe use a dictionary so I can maintain the connection with the address?
+      //Because then I can replace the address with the ENS name, but leave the big nums/nonENS contract addresses alone.
     };
     getEvents();
   }, [contractAddress, contractEvents, isError]);
