@@ -28,7 +28,7 @@ const fetcher = async (...args) => {
   throw new Error(true);
 };
 
-function useData(contractAddress) {
+function GetData(contractAddress) {
   const { data, error } = useSWR(
     contractAddress ? `api/getAbi?address=${contractAddress}` : null,
     fetcher
