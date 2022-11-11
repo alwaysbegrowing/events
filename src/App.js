@@ -11,8 +11,9 @@ import {
   Empty,
   PageHeader,
   Col,
+  Dropdown,
 } from "antd";
-import { GithubOutlined } from "@ant-design/icons";
+import { GithubOutlined, DownOutlined } from "@ant-design/icons";
 import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
@@ -44,7 +45,7 @@ function useData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  // const [abiError, setAbiError] = useState(false);
+  const [network, setNetwork] = useState("network");
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
@@ -54,6 +55,36 @@ function App() {
   }));
 
   const { contractEvents, isLoading, isError } = useData(contractAddress);
+
+  const onClick = ({ key }) => {
+    if (key === "1") {
+      setNetwork("homestead");
+    } else if (key === "2") {
+      setNetwork("goerli");
+    } else if (key === "3") {
+      setNetwork("arbitrum");
+    } else if (key === "4") {
+      setNetwork("optimism");
+    }
+  };
+  const items = [
+    {
+      label: "homestead",
+      key: "1",
+    },
+    {
+      label: "goerli",
+      key: "2",
+    },
+    {
+      label: "arbitrum",
+      key: "3",
+    },
+    {
+      label: "optimism",
+      key: "4",
+    },
+  ];
 
   const createColumns = (filter) => [
     {
@@ -118,7 +149,10 @@ function App() {
         setEvents([]);
         return;
       }
-      const provider = new ethers.providers.AlchemyProvider();
+      const provider = new ethers.providers.AlchemyProvider(
+        network,
+        "wCryiyIOCMZzZCNPoBacEqARPSsOM3Rx"
+      );
 
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
@@ -127,8 +161,7 @@ function App() {
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
 
-      const addresses = queryResult.map((item) => item.args);
-      console.log(addresses);
+      // const addresses = queryResult.map((item) => item.args.target);
 
       const timestampArr = [];
 
@@ -145,17 +178,15 @@ function App() {
 
       getTimestamp();
 
-      async function getAddresses() {
-        const contractName = addresses.map((address) => {
-          address.forEach(async (element) => {
-            const ens = await provider.lookupAddress(element);
-            console.log(ens);
-          });
-        });
-        console.log(contractName);
-      }
+      // async function getAddresses() {
+      //   for (const address of addresses) {
+      //     const ens = await provider.lookupAddress(address);
+      //     console.log(ens);
+      //     return ens;
+      //   }
+      // }
 
-      getAddresses();
+      // getAddresses();
 
       //I want to get the ENS for each contract address if available. If not available, return the contract address as a string.
       //The addressses are held in the data which is decoded in the column.
@@ -163,7 +194,7 @@ function App() {
       //Because then I can replace the address with the ENS name, but leave the big nums/nonENS contract addresses alone.
     };
     getEvents();
-  }, [contractAddress, contractEvents, isError]);
+  }, [contractAddress, contractEvents, isError, network]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -200,8 +231,25 @@ function App() {
           style={{ backgroundColor: "#fff" }}
           title="Blockchain Event Explorer"
         >
-          Enter a smart contract address below to see all historic events
-          emitted from that contract.{" "}
+          <Row gutter={[16, 24]}>
+            <Col span={24}>
+              <Dropdown
+                menu={{
+                  items,
+                  onClick,
+                }}
+              >
+                <Button type="primary">{network}</Button>
+              </Dropdown>
+            </Col>
+          </Row>
+          <br></br>
+          <Row>
+            <Col span={24}>
+              Enter a smart contract address below to see all historic events
+              emitted from that contract.{" "}
+            </Col>
+          </Row>
         </PageHeader>
 
         <div style={{ background: "#fff", padding: 24 }}>
