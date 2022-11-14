@@ -13,7 +13,7 @@ import {
   Col,
   Dropdown,
 } from "antd";
-import { GithubOutlined, DownOutlined } from "@ant-design/icons";
+import { GithubOutlined } from "@ant-design/icons";
 import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
@@ -45,7 +45,7 @@ function useData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [network, setNetwork] = useState("network");
+  const [network, setNetwork] = useState("homestead");
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
@@ -156,6 +156,7 @@ function App() {
 
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
+
       const queryResult = await contract.queryFilter(contract.filters);
       setEvents(queryResult);
 
@@ -188,7 +189,7 @@ function App() {
 
       // getAddresses();
 
-      //I want to get the ENS for each contract address if available. If not available, return the contract address as a string.
+      //I want to get the ENS for each contract if available. If not available, return the contract address as a string.
       //The addressses are held in the data which is decoded in the column.
       //I need to split the array, but maybe use a dictionary so I can maintain the connection with the address?
       //Because then I can replace the address with the ENS name, but leave the big nums/nonENS contract addresses alone.
@@ -239,7 +240,7 @@ function App() {
                   onClick,
                 }}
               >
-                <Button type="primary">{network}</Button>
+                <Button type="primary">network: {network}</Button>
               </Dropdown>
             </Col>
           </Row>
