@@ -29,9 +29,11 @@ const fetcher = async (...args) => {
   throw new Error(true);
 };
 
-function useData(contractAddress) {
+function useData(contractAddress, network) {
   const { data, error } = useSWR(
-    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
+    contractAddress
+      ? `api/getAbi?address=${contractAddress}&network=${network}`
+      : null,
     fetcher
   );
 
@@ -54,7 +56,10 @@ function App() {
     timestamp: timestamps[index],
   }));
 
-  const { contractEvents, isLoading, isError } = useData(contractAddress);
+  const { contractEvents, isLoading, isError } = useData(
+    contractAddress,
+    network
+  );
 
   const onClick = ({ key }) => {
     if (key === "1") {
@@ -63,8 +68,6 @@ function App() {
       setNetwork("goerli");
     } else if (key === "3") {
       setNetwork("arbitrum");
-    } else if (key === "4") {
-      setNetwork("optimism");
     }
   };
   const items = [
@@ -79,10 +82,6 @@ function App() {
     {
       label: "arbitrum",
       key: "3",
-    },
-    {
-      label: "optimism",
-      key: "4",
     },
   ];
 
@@ -285,6 +284,7 @@ function App() {
       </Content>
       <Footer style={{ textAlign: "center" }}>
         Created by <a href="https://abg.garden">Always Be Growing</a>
+        <p>Powered by Ethers & The Arbitrum Ethereum Explorer APIs</p>
       </Footer>
     </Layout>
   );
