@@ -56,6 +56,8 @@ function App() {
     timestamp: timestamps[index],
   }));
 
+  console.log({ updatedEventsTime });
+
   const { contractEvents, isLoading, isError } = useData(
     contractAddress,
     network
@@ -178,15 +180,31 @@ function App() {
 
       getTimestamp();
 
-      // async function getAddresses() {
-      //   for (const address of addresses) {
-      //     const ens = await provider.lookupAddress(address);
-      //     console.log(ens);
-      //     return ens;
-      //   }
-      // }
+      const updatedEvents = [];
 
-      // getAddresses();
+      async function getAddresses() {
+        queryResult.map(async (event) => {
+          if (event.args.target) {
+            const ens = await provider.lookupAddress(event.args.target);
+            if (ens !== null) {
+              updatedEvents.push({
+                ...event,
+                args: {
+                  target: ens,
+                  ...event.args,
+                },
+              });
+            } else {
+              updatedEvents.push({
+                ...event,
+              });
+            }
+          }
+        });
+      }
+
+      getAddresses();
+      console.log({ updatedEvents });
 
       //I want to get the ENS for each contract if available. If not available, return the contract address as a string.
       //The addressses are held in the data which is decoded in the column.
