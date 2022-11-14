@@ -1,29 +1,60 @@
 import React, { useEffect, useState, useRef } from "react";
+import useSWR from "swr";
 import { ethers } from "ethers";
 import {
   Table,
   Input,
-  Card,
   Layout,
-  Typography,
   Row,
   ConfigProvider,
   Button,
   Empty,
   PageHeader,
-  Divider, Col
+  Col,
 } from "antd";
-import { ContainerOutlined, GithubOutlined } from "@ant-design/icons";
+import { GithubOutlined } from "@ant-design/icons";
+import { timeDifferenceForDate } from "readable-timestamp-js";
 
 const { Header, Footer, Content } = Layout;
-const { Title } = Typography;
+
+const fetcher = async (...args) => {
+  const res = await fetch(...args);
+  if (res.ok) {
+    const response = await res.json();
+    if (response.status === "1") {
+      return response;
+    }
+  }
+  throw new Error(true);
+};
+
+function GetData(contractAddress) {
+  const { data, error } = useSWR(
+    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
+    fetcher
+  );
+
+  return {
+    contractEvents: data,
+    isLoading: !error && !data,
+    isError: error,
+  };
+}
 
 
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [loading, setLoading] = useState(false);
+  const [abiError, setAbiError] = useState(false);
+  const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
+
+  const updatedEventsTime = events.map((event, index) => ({
+    ...event,
+    timestamp: timestamps[index],
+  }));
+
+  const { contractEvents, isLoading, isError } = GetData(contractAddress);
 
   const createColumns = (filter) => [
     {
@@ -40,7 +71,10 @@ function App() {
         const data = Object.entries({ ...temp.args });
         const noNumbers = data.filter((row) => isNaN(row[0]));
         const rows = noNumbers.map((name, index) => (
-          <li key={index}>{JSON.stringify(name)}</li>
+          <li key={index}>
+            <b>{JSON.stringify(name[0]).replace(/"/g, "")}:</b>{" "}
+            {name[1].toString()}
+          </li>
         ));
         return <>{rows}</>;
       },
@@ -50,6 +84,18 @@ function App() {
       dataIndex: "blockNumber",
       key: "blockNumber",
       sorter: (a, b) => a.blockNumber - b.blockNumber,
+      sortOrder: "descend",
+    },
+    {
+      title: "Timestamp",
+      dataIndex: "timestamp",
+      key: "timestamp",
+      render: (timestamp) => {
+        if (!timestamp) {
+          return <p>Loading...</p>;
+        }
+        return timestamp;
+      },
     },
   ];
 
@@ -88,91 +134,118 @@ function App() {
 
   const customizeRenderEmpty = () => (
     <Empty
-      image={Empty.PRESENTED_IMAGE_SIMPLE
-      }
-
-      description={null}
-    >
-      <Button onClick={() => inputRef.current.focus()}>
-        Enter a contract address
-      </Button>    </Empty>
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={isError ? "Error" : "No Events"}
+    ></Empty>
   );
 
   useEffect(() => {
     const getEvents = async () => {
-      if (!contractAddress) {
+      if (!contractAddress || !contractEvents) {
+        setEvents([]);
         return;
       }
       const provider = new ethers.providers.AlchemyProvider();
-      const result = await fetch(`api/getAbi?address=${contractAddress}`);
-      const data = await result.json();
-      const { abi } = data;
+
+      const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
       const queryResult = await contract.queryFilter(contract.filters);
       getCurrentRoles(queryResult)
       setEvents(queryResult);
-      setLoading(false);
+
+      const eventBlocks = queryResult.map((item) => item.blockNumber);
+
+      const timestampArr = [];
+
+      async function getTimestamp() {
+        for (const block of eventBlocks) {
+          const time = await provider.getBlock(block);
+          const timestamp = time.timestamp;
+          const date = new Date(timestamp * 1000);
+          const newDate = timeDifferenceForDate(date);
+          timestampArr.push(newDate);
+        }
+        setTimestamps(timestampArr);
+      }
+
+      getTimestamp();
     };
     getEvents();
-  }, [contractAddress]);
-
+  }, [contractAddress, contractEvents, isError]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ backgroundColor: "#f6ffed" }} >
+      <Header style={{ backgroundColor: "#f6ffed" }}>
         <Row justify="space-between">
-          <Col><img
-            style={{
-              float: 'left',
-              height: 31,
-              // width: 200,
-              margin: '16px 0px 16px 0'
-            }}
-            src="https://tse3.mm.bing.net/th?id=OIP.XYaeDXspGLV6vl4xFh7CDgHaHa"
-          />
+          <Col>
+            <img
+              style={{
+                float: "left",
+                height: 31,
+                // width: 200,
+                margin: "16px 0px 16px 0",
+              }}
+              src="https://tse3.mm.bing.net/th?id=OIP.XYaeDXspGLV6vl4xFh7CDgHaHa"
+              alt="abg logo"
+            />
             <b> Always Be Growing</b>
           </Col>
-          <Col>    <Button onClick={() => { window.open('https://github.com/alwaysbegrowing/events') }} type="text"><GithubOutlined /></Button>
+          <Col>
+            {" "}
+            <Button
+              onClick={() => {
+                window.open("https://github.com/alwaysbegrowing/events");
+              }}
+              type="text"
+            >
+              <GithubOutlined />
+            </Button>
           </Col>
-
         </Row>
       </Header>
-      <Content style={{ padding: '0 24px', marginTop: 16 }}>
-        <PageHeader style={{ backgroundColor: "#fff" }} title='Blockchain Event Explorer'>Enter a smart contract address below to see all historic events emitted from that contract. </PageHeader>
+      <Content style={{ padding: "0 24px", marginTop: 16 }}>
+        <PageHeader
+          style={{ backgroundColor: "#fff" }}
+          title="Blockchain Event Explorer"
+        >
+          Enter a smart contract address below to see all historic events
+          emitted from that contract.{" "}
+        </PageHeader>
 
-        <div style={{ background: '#fff', padding: 24 }}>
-
-          <div >
-            {/* // 0x9f20521ef789fd2020e708390b1e6c701d8218ba */}
+        <div style={{ background: "#fff", padding: 24 }}>
+          <div>
             <Input
               placeholder="Contract Address"
               value={contractAddress}
               onChange={(event) => {
                 setContractAddress(event.target.value);
-                setLoading(true);
               }}
               ref={inputRef}
             />
           </div>
 
           {/* Added math.random() because the keys were not unique which was messing with the blockNumber sorting */}
-          {contractAddress && <ConfigProvider renderEmpty={customizeRenderEmpty}>
-            <Table
-              style={{ marginTop: 24 }}
-              pagination={false}
-              rowKey={(record, index) =>
-                record.logIndex + Math.random() * index
-              }
-              columns={createColumns(filter)}
-              dataSource={events}
-              loading={loading}
-            />
-
-          </ConfigProvider>}
-        </div >
+          {contractAddress && (
+            <ConfigProvider renderEmpty={customizeRenderEmpty}>
+              <Table
+                style={{ marginTop: 24 }}
+                pagination={false}
+                rowKey={(record, index) =>
+                  record.logIndex + Math.random() * index
+                }
+                columns={createColumns(filter)}
+                dataSource={updatedEventsTime}
+                loading={isLoading}
+                scroll={{ x: 400 }}
+              />
+            </ConfigProvider>
+          )}
+        </div>
       </Content>
-      <Footer style={{ textAlign: 'center' }}>Created by <a href="https://abg.garden">Always Be Growing</a></Footer>
-    </Layout >
+      <Footer style={{ textAlign: "center" }}>
+        Created by <a href="https://abg.garden">Always Be Growing</a>
+      </Footer>
+    </Layout>
   );
 }
 
