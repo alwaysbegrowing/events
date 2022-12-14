@@ -1,20 +1,49 @@
 const fetch = require("node-fetch");
 
 export default async function handler(request, response) {
-  const { address } = request.query;
+  const { address, network } = request.query;
 
-  // make an API call to the ABIs endpoint
-  const result = await fetch(
-    `https://api.etherscan.io/api?module=contract&action=getabi&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
-  );
-  const data = await result.json();
+  if (network === "homestead") {
+    const result = await fetch(
+      `https://api.etherscan.io/api?module=contract&action=getabi&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+    );
 
-  // print the JSON response
-  let abi = data.result;
+    const data = await result.json();
 
-  return response.status(result.status).json({
-    abi,
-    status: data.status,
-    message: data.message,
-  });
+    let abi = data.result;
+
+    return response.status(result.status).json({
+      abi,
+      status: data.status,
+      message: data.message,
+    });
+  } else if (network === "goerli") {
+    const result = await fetch(
+      `https://api-goerli.etherscan.io/api?module=contract&action=getabi&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+    );
+
+    const data = await result.json();
+
+    let abi = data.result;
+
+    return response.status(result.status).json({
+      abi,
+      status: data.status,
+      message: data.message,
+    });
+  } else if (network === "arbitrum") {
+    const result = await fetch(
+      `https://api.arbiscan.io/api?module=contract&action=getabi&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+    );
+
+    const data = await result.json();
+
+    let abi = data.result;
+
+    return response.status(result.status).json({
+      abi,
+      status: data.status,
+      message: data.message,
+    });
+  }
 }

@@ -11,6 +11,7 @@ import {
   Empty,
   PageHeader,
   Col,
+  Dropdown,
 } from "antd";
 import { GithubOutlined } from "@ant-design/icons";
 import { timeDifferenceForDate } from "readable-timestamp-js";
@@ -28,9 +29,11 @@ const fetcher = async (...args) => {
   throw new Error(true);
 };
 
-function GetData(contractAddress) {
+function useData(contractAddress, network) {
   const { data, error } = useSWR(
-    contractAddress ? `api/getAbi?address=${contractAddress}` : null,
+    contractAddress
+      ? `api/getAbi?address=${contractAddress}&network=${network}`
+      : null,
     fetcher
   );
 
@@ -45,7 +48,7 @@ function GetData(contractAddress) {
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
-  const [abiError, setAbiError] = useState(false);
+  const [network, setNetwork] = useState("homestead");
   const [timestamps, setTimestamps] = useState([]);
   const inputRef = useRef(null);
 
@@ -54,7 +57,36 @@ function App() {
     timestamp: timestamps[index],
   }));
 
-  const { contractEvents, isLoading, isError } = GetData(contractAddress);
+  console.log({ updatedEventsTime });
+
+  const { contractEvents, isLoading, isError } = useData(
+    contractAddress,
+    network
+  );
+
+  const onClick = ({ key }) => {
+    if (key === "1") {
+      setNetwork("homestead");
+    } else if (key === "2") {
+      setNetwork("goerli");
+    } else if (key === "3") {
+      setNetwork("arbitrum");
+    }
+  };
+  const items = [
+    {
+      label: "homestead",
+      key: "1",
+    },
+    {
+      label: "goerli",
+      key: "2",
+    },
+    {
+      label: "arbitrum",
+      key: "3",
+    },
+  ];
 
   const createColumns = (filter) => [
     {
@@ -145,15 +177,21 @@ function App() {
         setEvents([]);
         return;
       }
-      const provider = new ethers.providers.AlchemyProvider();
+      const provider = new ethers.providers.AlchemyProvider(
+        network,
+        "wCryiyIOCMZzZCNPoBacEqARPSsOM3Rx"
+      );
 
       const { abi } = contractEvents;
       const contract = new ethers.Contract(contractAddress, abi, provider);
+
       const queryResult = await contract.queryFilter(contract.filters);
       getCurrentRoles(queryResult)
       setEvents(queryResult);
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
+
+      // const addresses = queryResult.map((item) => item.args.target);
 
       const timestampArr = [];
 
@@ -169,9 +207,40 @@ function App() {
       }
 
       getTimestamp();
+
+      const updatedEvents = [];
+
+      async function getAddresses() {
+        queryResult.map(async (event) => {
+          if (event.args.target) {
+            const ens = await provider.lookupAddress(event.args.target);
+            if (ens !== null) {
+              updatedEvents.push({
+                ...event,
+                args: {
+                  target: ens,
+                  ...event.args,
+                },
+              });
+            } else {
+              updatedEvents.push({
+                ...event,
+              });
+            }
+          }
+        });
+      }
+
+      getAddresses();
+      console.log({ updatedEvents });
+
+      //I want to get the ENS for each contract if available. If not available, return the contract address as a string.
+      //The addressses are held in the data which is decoded in the column.
+      //I need to split the array, but maybe use a dictionary so I can maintain the connection with the address?
+      //Because then I can replace the address with the ENS name, but leave the big nums/nonENS contract addresses alone.
     };
     getEvents();
-  }, [contractAddress, contractEvents, isError]);
+  }, [contractAddress, contractEvents, isError, network]);
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -208,8 +277,25 @@ function App() {
           style={{ backgroundColor: "#fff" }}
           title="Blockchain Event Explorer"
         >
-          Enter a smart contract address below to see all historic events
-          emitted from that contract.{" "}
+          <Row gutter={[16, 24]}>
+            <Col span={24}>
+              <Dropdown
+                menu={{
+                  items,
+                  onClick,
+                }}
+              >
+                <Button type="primary">network: {network}</Button>
+              </Dropdown>
+            </Col>
+          </Row>
+          <br></br>
+          <Row>
+            <Col span={24}>
+              Enter a smart contract address below to see all historic events
+              emitted from that contract.{" "}
+            </Col>
+          </Row>
         </PageHeader>
 
         <div style={{ background: "#fff", padding: 24 }}>
@@ -244,6 +330,7 @@ function App() {
       </Content>
       <Footer style={{ textAlign: "center" }}>
         Created by <a href="https://abg.garden">Always Be Growing</a>
+        <p>Powered by Ethers & The Arbitrum Ethereum Explorer APIs</p>
       </Footer>
     </Layout>
   );
