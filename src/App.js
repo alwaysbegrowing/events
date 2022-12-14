@@ -44,6 +44,7 @@ function useData(contractAddress, network) {
   };
 }
 
+
 function App() {
   const [events, setEvents] = useState([]);
   const [contractAddress, setContractAddress] = useState();
@@ -137,6 +138,32 @@ function App() {
     value: event,
   }));
 
+  const getCurrentRoles = (events) => {
+    const roles = {}
+    // events must be in assending order or role calculations will be incorrect
+    events.sort((a, b) => (
+      a.blockNumber > b.blockNumber
+    ))
+    events.forEach((event) => {
+      if (event.event === "RoleGranted") {
+        if (!roles[event.args[0]]) {
+          roles[event.args[0]] = {}
+        }
+        roles[event.args[0]][event.args[1]] = true
+      }
+      if (event.event === "RoleRevoked") {
+        if (!roles[event.args[0]]) {
+          roles[event.args[0]] = {}
+        }
+        roles[event.args[0]][event.args[1]] = false
+
+      }
+    })
+    console.log({ roles })
+    return roles
+
+  }
+
   const customizeRenderEmpty = () => (
     <Empty
       image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -159,6 +186,7 @@ function App() {
       const contract = new ethers.Contract(contractAddress, abi, provider);
 
       const queryResult = await contract.queryFilter(contract.filters);
+      getCurrentRoles(queryResult)
       setEvents(queryResult);
 
       const eventBlocks = queryResult.map((item) => item.blockNumber);
