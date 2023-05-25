@@ -1,5 +1,7 @@
 const fetch = require("node-fetch");
 
+const constant = "WOW";
+
 export default async function handler(request, response) {
   const { address, network } = request.query;
 
